@@ -19,6 +19,7 @@ import (
 
 type PrinterSession interface {
 	Connect(ctx context.Context) (map[string]any, error)
+	Connected() (bool, error)
 	PrintImage(ctx context.Context, rendered render.Result, copies int) api.PrintResponse
 	Metadata() map[string]any
 	Close() error
@@ -242,6 +243,8 @@ type LivePreviewState struct {
 	RenderedSeq  int
 	PNG          []byte
 	PNGHash      string
+	WidthPx      int
+	HeightPx     int
 	LastOpenHash string
 	LastKey      string
 	RedrawSeq    int
@@ -370,7 +373,7 @@ func activePresetIndex(presets []config.LabelPreset, name string, doc label.Docu
 		}
 	}
 	for i, preset := range presets {
-		if preset.WidthMM == doc.WidthMM && preset.HeightMM == doc.HeightMM && strings.EqualFold(preset.Shape, doc.Shape) {
+		if config.MatchesStock(doc, preset) {
 			return i
 		}
 	}
